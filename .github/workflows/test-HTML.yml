@@ -1,0 +1,84 @@
+name: Run Linter and Tests.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "HTML/**"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "HTML/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if pyproject.toml exists
+        id: check_poetry_file
+        run: |
+          if [ ! -f "HTML/pyproject.toml" ]; then
+            echo "pyproject.toml not found, stopping workflow."
+            echo "SKIP_WORKFLOW=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install Python
+        if: env.SKIP_WORKFLOW != 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH  # Add Poetry to PATH
+          poetry --version
+
+      - name: Install dependencies
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd HTML
+          poetry install
+
+      - name: Run Linter
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd HTML
+          poetry run ruff check .  # Run Ruff on the codebase
+
+      - name: Run mypy
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd HTML
+          poetry run mypy .
+
+      - name: Check if test files exist
+        if: env.SKIP_WORKFLOW != 'true'
+        id: check_test_files
+        run: |
+          cd HTML
+          if find . -type f -name 'test_*.py' | grep -q '.'; then
+            echo "Test files found"
+            echo "run-tests=true" >> $GITHUB_ENV
+          else
+            echo "No test files found"
+            echo "run-tests=false" >> $GITHUB_ENV
+          fi
+
+      - name: Run tests
+        if: env.run-tests == 'true' && env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd HTML
+          export PYTHONPATH=$(pwd)
+          poetry run pytest
+
+      - name: Skip tests
+        if: env.run-tests == 'false' && env.SKIP_WORKFLOW != 'true'
+        run: echo "No test files found, skipping tests..."

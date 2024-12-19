@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "contracts"
+version = "0.1.0"
+description = ""
+authors = ["AyaMoeen <ayamoinn95@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+ruff = "^0.7.1"
+django = "5.1"
+mypy = "^1.13.0"
+pytest = "^8.3.3"
+djangorestframework = "^3.15.2"
+djangorestframework-simplejwt = "^5.3.1"
+django-cors-headers = "^4.5.0"
+google-auth = "^2.35.0"
+google-auth-oauthlib = "^1.2.1"
+google-auth-httplib2 = "^0.2.0"
+google-api-python-client = "^2.149.0"
+django-stubs = "^5.1.1"
+djangorestframework-stubs = "^3.15.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

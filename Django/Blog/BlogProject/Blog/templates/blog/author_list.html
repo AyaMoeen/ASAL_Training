@@ -1,0 +1,18 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Author List{% endblock %}
+
+{% block content %}
+<div class="author-header">
+    <h1>Author List</h1>
+</div>
+
+<ul class="author-list">
+    {% for author in authors %}
+        <p>{{ author.username }}</p>
+        <p>{{ author.email }}</p>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'post_page' %}" class="btn back-btn">Back to Posts</a>
+{% endblock %}

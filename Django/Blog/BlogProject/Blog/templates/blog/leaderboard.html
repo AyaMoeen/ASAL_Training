@@ -1,0 +1,29 @@
+{% extends "blog/base.html" %}
+
+{% block title %}Blog Posts{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Leaderboard</h1>
+
+    <h2>Top Contributors by Posts</h2>
+    <ul>
+        {% for user in leaderboard_posts %}
+        <li>{{ user.username }} - {{ user.post_count }} posts</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Top Contributors by Likes</h2>
+    <ul>
+        {% for user in leaderboard_likes %}
+        <li>{{ user.username }} - {{ user.like_count }} likes</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Top Contributors by Comments</h2>
+    <ul>
+        {% for user in leaderboard_comments %}
+        <li>{{ user.username }} - {{ user.comment_count }} comments</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: azuredevopsserverless
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: blog-project
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: sentiment-analysis
+
+provider:
+  name: aws
+  runtime: python3.12
+  stage: dev
+  region: us-east-1
+
+functions:
+  analyzeSentiment:
+    handler: handler.analyze_sentiment
+    events:
+      - http:
+          path: sentiment-analysis
+          method: post
+          cors: true
+    environment:
+      SENTIMENT_LAMBDA_URL: "https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english"  
+    role: SentimentLambdaExecutionRole  
+
+plugins:
+  - serverless-offline
+  - serverless-python-requirements
+
+resources:
+  Resources:
+    SentimentLambdaExecutionRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "sts:AssumeRole"
+              Principal:
+                Service: lambda.amazonaws.com
+        Policies:
+          - PolicyName: SentimentLambdaPolicy
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "lambda:InvokeFunction"
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                  Resource: "*"
+
+   

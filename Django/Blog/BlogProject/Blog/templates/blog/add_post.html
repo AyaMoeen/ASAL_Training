@@ -1,0 +1,43 @@
+{% extends "blog/base.html" %}
+{% block content %}
+  <h2>Add New Post</h2>
+  <form id="generatePostForm" method="post" action="{% url 'chatgpt_generate_post' %}">
+    {% csrf_token %}
+    <textarea name="prompt" placeholder="Enter prompt for new post"></textarea>
+    <button type="submit">Generate Post</button>
+</form>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn submit-btn">Save</button>
+  </form>
+  <div id="generatedPostContent"></div>
+
+<script>
+  document.getElementById('generatePostForm').addEventListener('submit', function(event) {
+      event.preventDefault();  
+
+      const form = document.getElementById('generatePostForm');
+      const formData = new FormData(form);
+      const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      fetch(form.action, {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': csrfToken,
+          },
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.error) {
+              alert(data.error);
+          } else {
+              document.getElementById('generatedPostContent').textContent = data.generated_text;
+          }
+      })
+      .catch(error => console.error('Error:', error));
+  });
+</script>
+{% endblock %}
