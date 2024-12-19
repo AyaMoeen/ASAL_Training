@@ -1,0 +1,84 @@
+name: Run Linter and Tests.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "Django/Contracts/**"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "Django/Contracts/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if pyproject.toml exists
+        id: check_poetry_file
+        run: |
+          if [ ! -f "Django/Contracts/pyproject.toml" ]; then
+            echo "pyproject.toml not found, stopping workflow."
+            echo "SKIP_WORKFLOW=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install Python
+        if: env.SKIP_WORKFLOW != 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH  # Add Poetry to PATH
+          poetry --version
+
+      - name: Install dependencies
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Django/Contracts
+          poetry install
+
+      - name: Run Linter
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Django/Contracts
+          poetry run ruff check .  # Run Ruff on the codebase
+
+      - name: Run mypy
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Django/Contracts
+          poetry run mypy .
+
+      - name: Check if test files exist
+        if: env.SKIP_WORKFLOW != 'true'
+        id: check_test_files
+        run: |
+          cd Django/Contracts
+          if find . -type f -name 'test_*.py' | grep -q '.'; then
+            echo "Test files found"
+            echo "run-tests=true" >> $GITHUB_ENV
+          else
+            echo "No test files found"
+            echo "run-tests=false" >> $GITHUB_ENV
+          fi
+
+      - name: Run Django tests
+        if: env.run-tests == 'true' && env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Django/Contracts
+          export PYTHONPATH=$(pwd)
+          poetry run python manage.py test  # Run Django test suite
+          
+      - name: Skip tests
+        if: env.run-tests == 'false' && env.SKIP_WORKFLOW != 'true'
+        run: echo "No test files found, skipping tests..."

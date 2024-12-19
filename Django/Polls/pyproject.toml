@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "polls"
+version = "0.1.0"
+description = ""
+authors = ["AyaMoeen <ayamoinn95@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "5.1"
+django-debug-toolbar = "^4.4.6"
+ruff = "^0.7.0"
+django-stubs = "^5.1.0"
+mypy = "^1.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

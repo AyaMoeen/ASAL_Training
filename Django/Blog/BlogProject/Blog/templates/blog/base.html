@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Blog{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header class="header">
+        <h1 class="title">Blog</h1>
+        <nav class="auth-links">
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="auth-btn logout-btn">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="auth-btn login-btn">Login</a> | 
+                <a href="{% url 'register' %}" class="auth-btn register-btn">Register</a>
+            {% endif %}
+        </nav>
+    </header>
+    
+    {% if user.is_authenticated %}
+        <div class="notifications">
+            <ul>
+                {% for notification in user.notifications.all %}
+                    <li>{{ notification.message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+    <div class="main-content">
+        {%  include "blog/messages.html" %}
+        {% block content %}
+        <div class="section-divider"></div>
+        {% endblock %}
+    </div>
+
+    <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+  <script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+  <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+  <script src="{% static 'js/blog-scripts.js' %}"></script>
+
+
+  <script>
+    setTimeout(function(){
+      if ($('#msg').length > 0) {
+        $('#msg').remove();
+      }
+    }, 5000)
+  </script>
+</body>
+</html>

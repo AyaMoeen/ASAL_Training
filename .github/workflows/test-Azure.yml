@@ -1,0 +1,76 @@
+name: Run Linter and Tests.
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "Azure/**"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "Azure/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if pyproject.toml exists
+        id: check_poetry_file
+        run: |
+          if [ ! -f "Azure/pyproject.toml" ]; then
+            echo "pyproject.toml not found, stopping workflow."
+            echo "SKIP_WORKFLOW=true" >> $GITHUB_ENV
+          fi
+
+      - name: check if serverless.yml exists
+        id: check_serverless_file
+        run: |
+          if [ ! -f "Azure/serverless.yml" ]; then
+            echo "serverless.yml not found, stopping workflow."
+            echo "SKIP_WORKFLOW=true" >> $GITHUB_ENV
+          fi
+
+      - name: Check if requirements.txt exists
+        id: check_requirements_file
+        run: |
+          if [ ! -f "Azure/requirements.txt" ]; then
+            echo "requirements.txt not found, stopping workflow."
+            echo "SKIP_WORKFLOW=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install Python
+        if: env.SKIP_WORKFLOW != 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH  # Add Poetry to PATH
+          poetry --version
+
+      - name: Install dependencies
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Azure
+          poetry install
+
+      - name: Run Linter
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Azure
+          poetry run ruff check .  # Run Ruff on the codebase
+
+      - name: Run mypy
+        if: env.SKIP_WORKFLOW != 'true'
+        run: |
+          cd Azure
+          poetry run mypy .

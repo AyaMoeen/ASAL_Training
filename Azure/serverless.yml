@@ -1,0 +1,64 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: azuredevopsserverless
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: azure-app
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: azure-server
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 20  
+  memorySize: 256  
+  ######
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+        - "sqs:GetQueueAttributes"
+        - "sqs:ReceiveMessage"
+      Resource:
+        - Fn::GetAtt: 
+            - MyQueueAzureDLQ
+            - Arn
+
+functions:
+  lambda_handler:
+    handler: handler.lambda_handler  
+    events:
+      - sqs:
+          arn: 
+            Fn::GetAtt:
+              - MyQueueAzure
+              - Arn
+          batchSize: 1  # Number of messages to process at once
+
+resources:
+  Resources:
+    MyQueueAzure:  
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: MyQueueAzure.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        VisibilityTimeout: 30
+        RedrivePolicy: # Link DLQ to the Main Queue
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - MyQueueAzureDLQ
+              - Arn
+          maxReceiveCount: 1 # Number of retries before sending to DLQ
+    
+    # Dead Letter Queue (DLQ)
+    MyQueueAzureDLQ:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: MyQueueAzureDLQ.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        MessageRetentionPeriod: 1209600
+
+plugins:
+  - serverless-python-requirements
+  
+
